@@ -6,7 +6,7 @@ const findById = function (id) {
 };
 
 const addItem = function (item) {
-    this.items.push(item);
+  this.items.push(item);
 };
 
 const findAndDelete = function (id) {
@@ -16,18 +16,17 @@ const findAndDelete = function (id) {
 const toggleCheckedFilter = function () {
     this.hideCheckedItems = !this.hideCheckedItems;
 };
-
-const findAndUpdate = function (id, newData) {
+const findAndUpdate = function(id, newData) {
     const item = this.items.find(cur => cur.id === id);
     Object.assign(item, newData);
-}
+};
 
 export default {
-    items,
-    hideCheckeditems,
-    findById,
-    addItem,
-    findAndUpdate,
-    findAndDelete,
-    toggleCheckedFilter
+  items,
+  hideCheckeditems,
+  findById,
+  addItem,
+  findAndUpdate,
+  findAndDelete,
+  toggleCheckedFilter
 };
