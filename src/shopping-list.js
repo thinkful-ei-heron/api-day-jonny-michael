@@ -1,19 +1,19 @@
 import $ from 'jquery';
 
 import store from './store';
-import item from './item';
+import api from './api';
 
 const generateItemElement = function (item) {
-  let itemTitle = `<span class="shopping-item shopping-item__checked">${item.name}</span>`;
-  if (!item.checked) {
-    itemTitle = `
+    let itemTitle = `<span class="shopping-item shopping-item__checked">${item.name}</span>`;
+    if (!item.checked) {
+        itemTitle = `
       <form class="js-edit-item">
         <input class="shopping-item" type="text" value="${item.name}" />
       </form>
     `;
-  }
+    }
 
-  return `
+    return `
     <li class="js-item-element" data-item-id="${item.id}">
       ${itemTitle}
       <div class="shopping-item-controls">
@@ -28,86 +28,124 @@ const generateItemElement = function (item) {
 };
 
 const generateShoppingItemsString = function (shoppingList) {
-  const items = shoppingList.map((item) => generateItemElement(item));
-  return items.join('');
+    const items = shoppingList.map((item) => generateItemElement(item));
+    return items.join('');
 };
 
 const render = function () {
-  // Filter item list if store prop is true by item.checked === false
-  let items = [...store.items];
-  if (store.hideCheckedItems) {
-    items = items.filter(item => !item.checked);
-  }
+    // Filter item list if store prop is true by item.checked === false
+    let items = [...store.items];
+    if (store.hideCheckedItems) {
+        items = items.filter(item => !item.checked);
+    }
 
-  // render the shopping list in the DOM
-  const shoppingListItemsString = generateShoppingItemsString(items);
+    // render the shopping list in the DOM
+    const shoppingListItemsString = generateShoppingItemsString(items);
 
-  // insert that HTML into the DOM
-  $('.js-shopping-list').html(shoppingListItemsString);
+    // insert that HTML into the DOM
+    $('.js-shopping-list').html(shoppingListItemsString);
 };
 
 const handleNewItemSubmit = function () {
-  $('#js-shopping-list-form').submit(function (event) {
-    event.preventDefault();
-    const newItemName = $('.js-shopping-list-entry').val();
-    $('.js-shopping-list-entry').val('');
-    store.addItem(newItemName);
-    render();
-  });
+    $('#js-shopping-list-form').submit(function (event) {
+        event.preventDefault();
+        const newItemName = $('.js-shopping-list-entry').val();
+        $('.js-shopping-list-entry').val('');
+        api.createItem(newItemName)
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    throw new Error(`HTTP ${res.status} not OK`);
+                }
+            })
+            .then(item => {
+                store.addItem(item);
+                render();
+            })
+            .catch(error => console.err(error))
+    });
 };
 
 const getItemIdFromElement = function (item) {
-  return $(item)
-    .closest('.js-item-element')
-    .data('item-id');
+    return $(item)
+        .closest('.js-item-element')
+        .data('item-id');
 };
 
 const handleDeleteItemClicked = function () {
-  // like in `handleItemCheckClicked`, we use event delegation
-  $('.js-shopping-list').on('click', '.js-item-delete', event => {
-    // get the index of the item in store.items
-    const id = getItemIdFromElement(event.currentTarget);
-    // delete the item
-    store.findAndDelete(id);
-    // render the updated shopping list
-    render();
-  });
+    // like in `handleItemCheckClicked`, we use event delegation
+    $('.js-shopping-list').on('click', '.js-item-delete', event => {
+        // get the index of the item in store.items
+        const id = getItemIdFromElement(event.currentTarget);
+        // delete the item
+        api.deleteItem(id)
+            .then(res => {
+                if (res.ok) {
+                    store.findAndDelete(id);
+                    render();
+                } else {
+                    throw new Error(`HTTP ${res.status} not OK`);
+                }
+            })
+            .catch(error => console.err(error));
+
+    });
 };
 
 const handleEditShoppingItemSubmit = function () {
-  $('.js-shopping-list').on('submit', '.js-edit-item', event => {
-    event.preventDefault();
-    const id = getItemIdFromElement(event.currentTarget);
-    const itemName = $(event.currentTarget).find('.shopping-item').val();
-    store.findAndUpdateName(id, itemName);
-    render();
-  });
+    $('.js-shopping-list').on('submit', '.js-edit-item', event => {
+        event.preventDefault();
+        const id = getItemIdFromElement(event.currentTarget);
+        const itemName = $(event.currentTarget).find('.shopping-item').val();
+        api.updateItem(id, {name: itemName})
+            .then(res => {
+                if (res.ok) {
+                    store.findAndUpdate(id, {name: itemName});
+                    render();
+                } else {
+                    throw new Error(`HTTP ${res.status} not OK`);
+                }
+            })
+            .catch(error => console.err(error));
+        // render();
+    });
 };
 
 const handleItemCheckClicked = function () {
-  $('.js-shopping-list').on('click', '.js-item-toggle', event => {
-    const id = getItemIdFromElement(event.currentTarget);
-    store.findAndToggleChecked(id);
-    render();
-  });
+    $('.js-shopping-list').on('click', '.js-item-toggle', event => {
+        const id = getItemIdFromElement(event.currentTarget);
+        const isChecked = store.findById(id).checked;
+        api.updateItem(id, {checked: !isChecked})
+            .then(res => {
+                if (res.ok) {
+                    store.findAndUpdate(id, {checked: !isChecked});
+                    render();
+                } else {
+                    throw new Error(`HTTP ${res.status} not OK`);
+                }
+            })
+            .catch(error => console.err(error));
+        render();
+    });
 };
 
 const handleToggleFilterClick = function () {
-  $('.js-filter-checked').click(() => {
-    store.toggleCheckedFilter();
-    render();
-  });
+    $('.js-filter-checked').click(() => {
+        store.toggleCheckedFilter();
+        render();
+    });
 };
 
 const bindEventListeners = function () {
-  handleNewItemSubmit();
-  handleItemCheckClicked();
-  handleDeleteItemClicked();
-  handleEditShoppingItemSubmit();
-  handleToggleFilterClick();
+    handleNewItemSubmit();
+    handleItemCheckClicked();
+    handleDeleteItemClicked();
+    handleEditShoppingItemSubmit();
+    handleToggleFilterClick();
 };
 // This object contains the only exposed methods from this module:
 export default {
-  render,
-  bindEventListeners
+    render,
+    bindEventListeners
 };
