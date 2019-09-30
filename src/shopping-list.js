@@ -38,7 +38,11 @@ const render = function () {
     if (store.hideCheckedItems) {
         items = items.filter(item => !item.checked);
     }
-
+    if(store.error.flag) {
+        console.log(store.error)
+        $('#error').show()
+            .text(store.error.message);
+    }
     // render the shopping list in the DOM
     const shoppingListItemsString = generateShoppingItemsString(items);
 
@@ -52,18 +56,14 @@ const handleNewItemSubmit = function () {
         const newItemName = $('.js-shopping-list-entry').val();
         $('.js-shopping-list-entry').val('');
         api.createItem(newItemName)
-            .then(res => {
-                if (res.ok) {
-                    return res.json();
-                } else {
-                    throw new Error(`HTTP ${res.status} not OK`);
-                }
-            })
             .then(item => {
                 store.addItem(item);
                 render();
             })
-            .catch(error => console.err(error))
+            .catch(error => {
+                store.setError(error);
+                render();
+            })
     });
 };
 
@@ -80,16 +80,14 @@ const handleDeleteItemClicked = function () {
         const id = getItemIdFromElement(event.currentTarget);
         // delete the item
         api.deleteItem(id)
-            .then(res => {
-                if (res.ok) {
+            .then(() => {
                     store.findAndDelete(id);
                     render();
-                } else {
-                    throw new Error(`HTTP ${res.status} not OK`);
-                }
             })
-            .catch(error => console.err(error));
-
+            .catch(error => {
+                store.setError(error);
+                render();
+            });
     });
 };
 
@@ -99,16 +97,14 @@ const handleEditShoppingItemSubmit = function () {
         const id = getItemIdFromElement(event.currentTarget);
         const itemName = $(event.currentTarget).find('.shopping-item').val();
         api.updateItem(id, {name: itemName})
-            .then(res => {
-                if (res.ok) {
+            .then(() => {
                     store.findAndUpdate(id, {name: itemName});
                     render();
-                } else {
-                    throw new Error(`HTTP ${res.status} not OK`);
-                }
             })
-            .catch(error => console.err(error));
-        // render();
+            .catch(error => {
+                store.setError(error);
+                render();
+            });
     });
 };
 
@@ -117,16 +113,14 @@ const handleItemCheckClicked = function () {
         const id = getItemIdFromElement(event.currentTarget);
         const isChecked = store.findById(id).checked;
         api.updateItem(id, {checked: !isChecked})
-            .then(res => {
-                if (res.ok) {
+            .then(() => {
                     store.findAndUpdate(id, {checked: !isChecked});
                     render();
-                } else {
-                    throw new Error(`HTTP ${res.status} not OK`);
-                }
             })
-            .catch(error => console.err(error));
-        render();
+            .catch(error => {
+                store.setError(error);
+                render();
+            });
     });
 };
 
@@ -137,6 +131,10 @@ const handleToggleFilterClick = function () {
     });
 };
 
+const handleError = function (obj) {
+    $('#error')
+
+};
 const bindEventListeners = function () {
     handleNewItemSubmit();
     handleItemCheckClicked();
