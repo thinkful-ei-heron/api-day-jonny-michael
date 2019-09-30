@@ -38,7 +38,7 @@ const render = function () {
     if (store.hideCheckedItems) {
         items = items.filter(item => !item.checked);
     }
-    if(store.error.flag) {
+    if (store.error.flag) {
         console.log(store.error)
         $('#error').show()
             .text(store.error.message);
@@ -81,8 +81,8 @@ const handleDeleteItemClicked = function () {
         // delete the item
         api.deleteItem(id)
             .then(() => {
-                    store.findAndDelete(id);
-                    render();
+                store.findAndDelete(id);
+                render();
             })
             .catch(error => {
                 store.setError(error);
@@ -98,8 +98,8 @@ const handleEditShoppingItemSubmit = function () {
         const itemName = $(event.currentTarget).find('.shopping-item').val();
         api.updateItem(id, {name: itemName})
             .then(() => {
-                    store.findAndUpdate(id, {name: itemName});
-                    render();
+                store.findAndUpdate(id, {name: itemName});
+                render();
             })
             .catch(error => {
                 store.setError(error);
@@ -114,8 +114,8 @@ const handleItemCheckClicked = function () {
         const isChecked = store.findById(id).checked;
         api.updateItem(id, {checked: !isChecked})
             .then(() => {
-                    store.findAndUpdate(id, {checked: !isChecked});
-                    render();
+                store.findAndUpdate(id, {checked: !isChecked});
+                render();
             })
             .catch(error => {
                 store.setError(error);
