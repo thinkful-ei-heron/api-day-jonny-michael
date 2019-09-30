@@ -39,9 +39,10 @@ const render = function () {
         items = items.filter(item => !item.checked);
     }
     if (store.error.flag) {
-        console.log(store.error)
-        $('#error').show()
-            .text(store.error.message);
+        $('#error').show();
+        $('#errormsg').text(store.error.message);
+    } else {
+        $('#error').hide();
     }
     // render the shopping list in the DOM
     const shoppingListItemsString = generateShoppingItemsString(items);
@@ -49,6 +50,13 @@ const render = function () {
     // insert that HTML into the DOM
     $('.js-shopping-list').html(shoppingListItemsString);
 };
+
+const handleErrorClose = function() {
+    $('#error-close').on('click', event => {
+        store.error.flag = false;
+        render();
+    })
+}
 
 const handleNewItemSubmit = function () {
     $('#js-shopping-list-form').submit(function (event) {
@@ -141,6 +149,7 @@ const bindEventListeners = function () {
     handleDeleteItemClicked();
     handleEditShoppingItemSubmit();
     handleToggleFilterClick();
+    handleErrorClose();
 };
 // This object contains the only exposed methods from this module:
 export default {

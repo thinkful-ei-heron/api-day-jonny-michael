@@ -33,7 +33,7 @@ const deleteItem = function(id) {
 const listApiFetch = function(...args) {
     let error;
     return fetch(...args).then(res => {
-        if (res.ok) {
+        if (!res.ok) {
             error = {code: res}
         }
         return res.json();
